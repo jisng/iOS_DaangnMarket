@@ -15,7 +15,7 @@
   - SwiftLint - 코드 가독성
   - Alamofire - REST API와 통신하고 `Result<Success, Failure>` 타입을 사용한 response 처리
   - SnapKit
-- KingFisher
+  - KingFisher
   - Then
   
   ### Tool
