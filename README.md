@@ -2,36 +2,17 @@
 
 > 패스트캠퍼스에서 약 1달간(2020.03.20 ~ 2020.04.29) 진행한 Backend 수강생들과의 협업 프로젝트
 
-## Description
+## 설명
 
 - Code UI
 - Custom View
-- Codable
-  - Encoding - query parameter
-  - Decoding - JSON format response 파싱
-- pagination 사용하여 데이터 양을 제한적으로 받음
-- Backend 개발자와 함께 데이터 구조 고민, 설계
-- Cocoapods를 통한 다양한 open source library 사용
-  - SwiftLint - 코드 가독성
-  - Alamofire - REST API와 통신하고 `Result<Success, Failure>` 타입을 사용한 response 처리
-  - SnapKit
-  - KingFisher
-  - Then
-  
-  ### Tool
-  
-- Git과 Git-Flow를 사용한 프로젝트 관리 경험
-  
-  - CLI(iTerm2) 및 GUI(GitKraken) 사용
-- AdobeXD - WireFrame 제작 기여
-- Miro - Flow Chart 제작 기여
-- Postman - REST API를 테스트
-- Github issue와 [project board](https://github.com/orgs/FinalProject-Team4/projects/4)를 사용
-- Slack의 web hook 기능을 사용하여 Github issue, pull request 등을 알림 받음
-- Notion을 사용하여 커뮤니케이션 및 troubleshooting 진행
+- Codable, Alamofire 사용하여 네트워크 통신을 함
+- SwiftLint, Then : 코드 가독성을 높이고, 유지보수 및 협업에 도움을 줌
+- SnapKit : 코드로 레이아웃 짤 때 도움 받음
+- KingFisher : 이미지 캐싱에 도움 받음
+- 협업 툴 : Git, Github project board / AdobeXD / Miro / Postman / Slack / Notion
 
-
-## Implementation
+## 담당 기능 구현
 
 - 게시글 피드 및 카테고리별 목록 조회
 
@@ -88,101 +69,19 @@
 
 ## TroubleShooting
 
-- TextView의 컨텐츠 내용에 맞춰 TableViewCell 크기가 늘어나야 함
-  ```swift
-  textView.sizeToFit()
-  
-  extension WriteTableTitleCell: UITextViewDelegate {
-    func textViewDidChange(_ textView: UITextView) {
-      UIView.setAnimationsEnabled(false)
-      self.tableView?.beginUpdates()
-      self.tableView?.endUpdates()
-      UIView.setAnimationsEnabled(true)
-    }
-  }
-  ```
-  - 텍스트뷰에 입력이 올 때마다 UI를 변경
-  
-- StackView에 담은 View를 삭제해야 함
-  - `stackView.removeArrangeSubView()`  만으로는 원하는 결과를 낼 수 없음
-  - stackView는 View 안에 있는 이중 View이므로, 위 메서드를 사용할 경우 stackView에만 지워지고 superView에는 남아있게 된다
-  - `stackView.removeFromSuperView()` 로 모두 지워줘야한다.
+- 1.
+  - 문제 : TextView의 컨텐츠 내용에 맞춰 TableViewCell 크기가 늘어나야 함
+  - 해결 : 텍스트뷰가 해당 셀에 딱 맞는 사이즈로 설정한 뒤, `beginUpdates()`, `endUpdates()` 를 사용하여 텍스트뷰에 텍스트가 입력 될 때마다 사이즈를 업데이트 해야 하는지 확인한다.
 
-- 카테고리 리스트를 서버에서는 영어로 저장, 앱에서는 한글로 보여야 하는 걸 한 번에 관리해야 함
-  ```swift
-  enum DGCategory: String, CaseIterable {
-    case digital, furniture, baby, life
-    case womanWear = "woman_wear"
-    case womanGoods = "woman_goods"
-    case beauty, male, sports, game, book, pet, other, buy
-    
-    var korean: String {
-      switch self {
-      case .digital:
-        return "디지털/가전"
-      case .furniture:
-        return "가구/인테리어"
-      case .baby:
-        return "유아동/유아도서"
-      case .life:
-        return "생활/가공식품"
-      case .womanWear:
-        return "여성의류"
-      case .womanGoods:
-        return "여상잡화"
-      case .beauty:
-        return "뷰티/미용"
-      case .male:
-        return "남성패션/잡화"
-      case .sports:
-        return "스포츠/레저"
-      case .game:
-        return "게임/취미"
-      case .book:
-        return "도서/티켓/음반"
-      case .pet:
-        return "반려동물용품"
-      case .other:
-        return "기타 중고물품"
-      case .buy:
-        return "삽니다"
-      }
-    }
-  }
+- 2.
+  - 문제 : StackView에 담은 View를 삭제해야 함
+  - 해결 : stackView는 View 안에 있는 이중 View이므로, 위 메서드를 사용할 경우 stackView에만 지워지고 superView에는 남아있다. `stackView.removeFromSuperView()` 로 모두 지워준다.
+
+- 3.
+  - 문제 : 카테고리 리스트를 서버에서는 영어로 저장하고, 앱에서 사용할 땐 한글로 보여줘야 함. 
+  - 해결 : enum을 사용하였고, korean 함수를 사용하여 선택한 케이스를 한글로 반환하도록 했다.
   
-  DGCategory.allCases.map { $0.rawValue }
-  DGCategory.allCases.map { $0.korean }
-  
-  ```
-  
-- Alamofire MultipartFormData 사용
-  ```swift
-  private func request(_ parameters: [String: Any], _ headers: HTTPHeaders, completion: @escaping (Result<Post, AFError>) -> Void) {
-    AF.upload(
-      multipartFormData: { (multiFormData) in
-        for (key, value) in parameters {
-          if let data = value as? [Data] { // 이미지
-            data.forEach {
-              let num = data.firstIndex(of: $0)
-              multiFormData.append($0, withName: key, fileName: "image\(num).jpeg", mimeType: "image/jpeg")
-            }
-          } else { // 그 외
-            multiFormData.append("\(value)".data(using: .utf8)!, withName: key)
-          }
-        }
-    }, to: "http://13.125.217.34/post/",
-       method: .post,
-       headers: headers
-    )
-      .validate()
-      .responseDecodable { (resonse: DataResponse<Post, AFError>) in
-        switch resonse.result {
-        case .success(let data):
-          completion(.success(data))
-        case .failure(let error):
-          completion(.failure(error))
-        }
-    }
-  }
-  ```
+- 4.
+  - 문제 : 이미지와 텍스트를 한 번에 서버에 전송해야 함
+  - 해결 : Alamofire MultipartFormData 사용하였고, parameters 타입은 `[String: Any]` 로 받는다. 전달하기 전 value가 Data 타입일 땐 다음과 같은 이미지 업로드 양식에 맞춰 전송하도록 했다. `multiFormData.append(value, withName: key, fileName: "image\(num).jpeg", mimeType: "image/jpeg")`
   
